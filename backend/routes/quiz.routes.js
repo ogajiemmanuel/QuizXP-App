@@ -1,5 +1,10 @@
 const express = require('express');
 
+const {
+    calculateQuizXP,
+    applyDailyXPCap
+} = require('../services/xp.service');
+
 const { pool } = require('../config');
 
 const { authenticateJWT } = require('../middleware/auth.middleware');
@@ -22,10 +27,14 @@ router.get('/subjects', async (req, res, next) => {
     }
 });
 
-// START QUIZ WITH SERVER-SIDE OPTION RANDOMIZATION
+// START QUIZ WITH SERVER-SIDE QUESTION SET + OPTION RANDOMIZATION
 router.get('/start/:quizId', authenticateJWT, async (req, res, next) => {
+    const client = await pool.connect();
+
     try {
-        const quizRes = await pool.query(
+        await client.query('BEGIN');
+
+        const quizRes = await client.query(
             `SELECT *
              FROM quizzes
              WHERE id = $1
@@ -34,6 +43,8 @@ router.get('/start/:quizId', authenticateJWT, async (req, res, next) => {
         );
 
         if (quizRes.rows.length === 0) {
+            await client.query('ROLLBACK');
+
             return res.status(404).json({
                 success: false,
                 message: 'Quiz not found or is not available.'
@@ -67,22 +78,70 @@ router.get('/start/:quizId', authenticateJWT, async (req, res, next) => {
 
         queryParams.push(quiz.question_count);
 
-        const questionsRes = await pool.query(
+        const questionsRes = await client.query(
             questionQuery,
             queryParams
         );
 
-        if (questionsRes.rows.length === 0) {
+        if (
+    questionsRes.rows.length !== quiz.question_count
+) {
+            await client.query('ROLLBACK');
+
             return res.status(400).json({
                 success: false,
-                message: 'No approved questions are available for this quiz.'
+                message: 'Not enough approved questions are available for this quiz.'
             });
         }
+
+        // Create the exact question set for this quiz attempt.
+        const questionIds = questionsRes.rows.map(
+            (question) => question.id
+        );
+
+        // Create the quiz attempt.
+        const attemptRes = await client.query(
+            `INSERT INTO quiz_attempts
+                (
+                    user_id,
+                    quiz_id,
+                    score,
+                    correct_answers,
+                    total_questions,
+                    duration_seconds,
+                    xp_gained,
+                    status,
+                    started_at,
+                    question_ids
+                )
+             VALUES
+                (
+                    $1,
+                    $2,
+                    0,
+                    0,
+                    $3,
+                    0,
+                    0,
+                    'in_progress',
+                    NOW(),
+                    $4::jsonb
+                )
+             RETURNING id, started_at`,
+            [
+                req.user.id,
+                quiz.id,
+                questionIds.length,
+                JSON.stringify(questionIds)
+            ]
+        );
+
+        const attempt = attemptRes.rows[0];
 
         const questionsWithShuffledOptions =
             await Promise.all(
                 questionsRes.rows.map(async (q) => {
-                    const optsRes = await pool.query(
+                    const optsRes = await client.query(
                         `SELECT
                             id,
                             option_key,
@@ -111,144 +170,248 @@ router.get('/start/:quizId', authenticateJWT, async (req, res, next) => {
                 })
             );
 
+        await client.query('COMMIT');
+
         res.json({
             success: true,
+            attemptId: attempt.id,
+            startedAt: attempt.started_at,
             quiz,
             questions: questionsWithShuffledOptions
         });
 
     } catch (err) {
+        await client.query('ROLLBACK');
         next(err);
+    } finally {
+        client.release();
     }
 });
 
 // SUBMIT QUIZ & CALCULATE SCORE SERVER-SIDE
 router.post('/submit', authenticateJWT, async (req, res, next) => {
     const {
-        quizId,
-        answers,
-        durationSeconds
-    } = req.body;
+    attemptId,
+    answers
+} = req.body;
 
-    if (!quizId || !answers || typeof answers !== 'object') {
+    if (
+        !attemptId ||
+        !answers ||
+        typeof answers !== 'object' ||
+        Array.isArray(answers)
+    ) {
         return res.status(400).json({
             success: false,
-            message: 'Quiz ID and answers are required.'
+            message: 'Attempt ID and answers are required.'
         });
     }
+
+
 
     const client = await pool.connect();
 
     try {
         await client.query('BEGIN');
 
-        // Make sure the quiz exists and is published
-        const quizRes = await client.query(
-            `SELECT *
-             FROM quizzes
-             WHERE id = $1
-               AND status = 'published'`,
-            [quizId]
+        // Get the user's active quiz attempt.
+        const attemptRes = await client.query(
+            `SELECT
+                qa.id,
+                qa.quiz_id,
+                qa.question_ids,
+                qa.status,
+                qa.started_at,
+                q.question_count,
+                q.subject_id,
+                q.topic_id,
+                q.time_limit_seconds
+             FROM quiz_attempts qa
+             JOIN quizzes q
+               ON q.id = qa.quiz_id
+             WHERE qa.id = $1
+               AND qa.user_id = $2
+               AND qa.status = 'in_progress'
+               AND q.status = 'published'`,
+            [
+                attemptId,
+                req.user.id
+            ]
         );
 
-        if (quizRes.rows.length === 0) {
+        if (attemptRes.rows.length === 0) {
             await client.query('ROLLBACK');
 
             return res.status(404).json({
                 success: false,
-                message: 'Quiz not found or is not available.'
+                message: 'Active quiz attempt not found.'
             });
         }
 
-        const quiz = quizRes.rows[0];
+        const attempt = attemptRes.rows[0];
 
-        let correctCount = 0;
+// Calculate the official quiz duration on the server.
+const startedAt = new Date(attempt.started_at).getTime();
+const now = Date.now();
 
-        const questionIds = Object.keys(answers);
+const duration = Math.max(
+    0,
+    Math.floor((now - startedAt) / 1000)
+);
 
-        if (questionIds.length === 0) {
+        // Make sure the attempt has a stored question set.
+        if (
+            !Array.isArray(attempt.question_ids) ||
+            attempt.question_ids.length === 0
+        ) {
             await client.query('ROLLBACK');
 
             return res.status(400).json({
                 success: false,
-                message: 'No answers were submitted.'
+                message: 'This quiz attempt has no valid question set.'
             });
         }
 
-        for (const qId of questionIds) {
-            const selectedOptId = answers[qId];
+        const questionIds = attempt.question_ids;
+
+        // Every submitted question ID must belong to this attempt.
+        const submittedQuestionIds = Object.keys(answers);
+
+        const invalidQuestionIds = submittedQuestionIds.filter(
+            (questionId) => !questionIds.includes(questionId)
+        );
+
+        if (invalidQuestionIds.length > 0) {
+            await client.query('ROLLBACK');
+
+            return res.status(400).json({
+                success: false,
+                message: 'One or more submitted question IDs are invalid for this quiz attempt.'
+            });
+        }
+
+        // Enforce the quiz time limit using the server-calculated duration.
+        if (
+            duration > attempt.time_limit_seconds
+        ) {
+            await client.query('ROLLBACK');
+
+            return res.status(400).json({
+                success: false,
+                message: 'Quiz submission exceeds the allowed time limit.'
+            });
+        }
+
+        let correctCount = 0;
+
+        // Score every question that was actually assigned
+        // to this attempt.
+        for (const questionId of questionIds) {
+            const selectedOptionId = answers[questionId];
+
+            // Unanswered questions count as wrong.
+            if (!selectedOptionId) {
+                continue;
+            }
 
             const checkRes = await client.query(
-                `SELECT is_correct
-                 FROM question_options
-                 WHERE id = $1
-                   AND question_id = $2`,
-                [selectedOptId, qId]
+                `SELECT
+                    qo.is_correct
+                 FROM questions q
+                 JOIN question_options qo
+                   ON qo.question_id = q.id
+                 WHERE q.id = $1
+                   AND q.status = 'approved'
+                   AND q.subject_id = $2
+                   AND ($3::uuid IS NULL OR q.topic_id = $3)
+                   AND qo.id = $4`,
+                [
+                    questionId,
+                    attempt.subject_id,
+                    attempt.topic_id,
+                    selectedOptionId
+                ]
             );
 
-            if (
-                checkRes.rows.length > 0 &&
-                checkRes.rows[0].is_correct === true
-            ) {
+            if (checkRes.rows.length === 0) {
+                await client.query('ROLLBACK');
+
+                return res.status(400).json({
+                    success: false,
+                    message: 'One or more submitted answers are invalid for this quiz.'
+                });
+            }
+
+            if (checkRes.rows[0].is_correct === true) {
                 correctCount++;
             }
         }
 
         const totalQuestions = questionIds.length;
 
-        const scorePct = Math.round(
-            (correctCount / totalQuestions) * 100
-        );
+const scorePct = Math.round(
+    (correctCount / totalQuestions) * 100
+);
 
-        // Basic MVP XP calculation
-        const xpGained = correctCount * 5;
+const xpResult = calculateQuizXP({
+    correctAnswers: correctCount,
+    totalQuestions,
+    durationSeconds: duration
+});
 
-        const attemptRes = await client.query(
-            `INSERT INTO quiz_attempts
-                (
-                    user_id,
-                    quiz_id,
-                    score,
-                    correct_answers,
-                    total_questions,
-                    duration_seconds,
-                    xp_gained,
-                    status,
-                    completed_at
-                )
-             VALUES
-                ($1, $2, $3, $4, $5, $6, $7, 'completed', NOW())
-             RETURNING id`,
+const xpCapResult = await applyDailyXPCap(
+    client,
+    req.user.id,
+    xpResult.totalXP
+);
+
+const xpGained = xpCapResult.awardedXP;
+        // Complete the existing attempt.
+        await client.query(
+            `UPDATE quiz_attempts
+             SET
+                score = $1,
+                correct_answers = $2,
+                total_questions = $3,
+                duration_seconds = $4,
+                xp_gained = $5,
+                status = 'completed',
+                completed_at = NOW()
+             WHERE id = $6
+               AND user_id = $7`,
             [
-                req.user.id,
-                quizId,
                 scorePct,
                 correctCount,
                 totalQuestions,
-                durationSeconds || 0,
-                xpGained
-            ]
-        );
-
-        // Ledger XP Record
-        await client.query(
-            `INSERT INTO xp_transactions
-                (
-                    user_id,
-                    amount,
-                    type,
-                    description
-                )
-             VALUES
-                ($1, $2, 'quiz_completion', $3)`,
-            [
-                req.user.id,
+                duration,
                 xpGained,
-                `Completed quiz with ${scorePct}% score`
+                attemptId,
+                req.user.id
             ]
         );
 
-        // Update Profile XP and Level
+        // XP ledger.
+        await client.query(
+    `INSERT INTO xp_transactions
+        (
+            user_id,
+            amount,
+            type,
+            source,
+            reference_id,
+            description
+        )
+     VALUES
+        ($1, $2, 'quiz_completion', 'quiz', $3, $4)`,
+    [
+        req.user.id,
+        xpGained,
+        attemptId,
+        `Completed quiz with ${scorePct}% score`
+    ]
+);
+
+        // Update profile XP and level.
         await client.query(
             `UPDATE profiles
              SET
@@ -256,14 +419,17 @@ router.post('/submit', authenticateJWT, async (req, res, next) => {
                 level = FLOOR((xp + $1) / 200) + 1,
                 updated_at = NOW()
              WHERE user_id = $2`,
-            [xpGained, req.user.id]
+            [
+                xpGained,
+                req.user.id
+            ]
         );
 
         await client.query('COMMIT');
 
         res.json({
             success: true,
-            attemptId: attemptRes.rows[0].id,
+            attemptId,
             score: scorePct,
             correctCount,
             totalQuestions,

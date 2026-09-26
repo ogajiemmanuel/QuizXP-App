@@ -3,3 +3,11 @@ node_modules/
 .env.local
 .env.production
 
+
+# Local test cookies
+cookies.txt
+login-cookies.txt
+
+# Local test cookies
+cookies.txt
+login-cookies.txt
