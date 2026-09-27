@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Quiz - QuizXP</title>
+
+    <link rel="stylesheet" href="css/global.css">
+
+</head>
+
+
+<body>
+
+    <header class="header">
+
+        <div class="header-container">
+
+            <a href="dashboard.html" class="logo">
+
+                <span class="logo-icon">⚡</span>
+
+                <span class="logo-text">
+                    Quiz<span class="accent">XP</span>
+                </span>
+
+            </a>
+
+
+            <div class="nav-actions">
+
+                <button
+                    id="theme-toggle"
+                    class="btn-icon"
+                    title="Toggle Theme"
+                    type="button"
+                >
+                    🌙
+                </button>
+
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <main class="quiz-page">
+
+        <section class="quiz-container">
+
+
+            <!-- Quiz Header -->
+
+            <div class="quiz-header">
+
+                <div>
+
+                    <span
+                        id="quiz-type"
+                        class="badge"
+                    >
+                        Quiz
+                    </span>
+
+                    <h1 id="quiz-title">
+                        Loading quiz...
+                    </h1>
+
+                    <p id="quiz-description">
+                        Please wait while your quiz loads.
+                    </p>
+
+                </div>
+
+
+                <div class="quiz-timer">
+
+                    <span>
+                        Time
+                    </span>
+
+                    <strong id="timer">
+                        00:00
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <!-- Progress -->
+
+            <div class="quiz-progress">
+
+                <div class="progress-info">
+
+                    <span id="question-progress">
+                        Question 1 of 1
+                    </span>
+
+                    <span id="question-score">
+                        0 answered
+                    </span>
+
+                </div>
+
+
+                <div class="progress-bar">
+
+                    <div
+                        id="progress-fill"
+                        class="progress-fill"
+                    ></div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Question -->
+
+            <section
+                id="question-container"
+                class="question-container"
+            >
+
+                <p class="loading-message">
+                    Loading your questions...
+                </p>
+
+            </section>
+
+
+            <!-- Navigation -->
+
+            <div class="quiz-navigation">
+
+                <button
+                    id="previous-button"
+                    type="button"
+                    class="btn-secondary"
+                    disabled
+                >
+                    Previous
+                </button>
+
+
+                <button
+                    id="next-button"
+                    type="button"
+                    class="btn-primary"
+                >
+                    Next
+                </button>
+
+            </div>
+
+
+            <!-- Submit -->
+
+            <div
+                id="submit-container"
+                class="submit-container"
+                hidden
+            >
+
+                <button
+                    id="submit-button"
+                    type="button"
+                    class="btn-primary btn-lg"
+                >
+                    Submit Quiz
+                </button>
+
+            </div>
+
+
+            <p
+                id="quiz-message"
+                class="form-message"
+                aria-live="polite"
+            ></p>
+
+
+        </section>
+
+    </main>
+
+
+    <script src="js/api.js"></script>
+    <script src="js/theme.js"></script>
+    <script src="js/quiz.js"></script>
+
+</body>
+
+</html>

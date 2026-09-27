@@ -1,31 +1,26 @@
-<!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<!DOCTYPE html><html lang="en" data-theme="dark"><head>
+    <meta charset="UTF-8"><meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
 
-<head>
-    <meta charset="UTF-8">
+<title>Dashboard - QuizXP</title>
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+<link rel="stylesheet" href="css/global.css">
 
-    <title>Dashboard - QuizXP</title>
+</head><body><header class="header">
 
-    <link rel="stylesheet" href="css/global.css">
-</head>
+    <div class="header-container">
 
-<body>
+        <a href="index.html" class="logo">
+            <span class="logo-icon">⚡</span>
 
-    <header class="header">
-        <div class="header-container">
+            <span class="logo-text">
+                Quiz<span class="accent">XP</span>
+            </span>
+        </a>
 
-            <a href="index.html" class="logo">
-                <span class="logo-icon">⚡</span>
-
-                <span class="logo-text">
-                    Quiz<span class="accent">XP</span>
-                </span>
-            </a>
+        <div class="nav-actions">
 
             <button
                 id="theme-toggle"
@@ -36,51 +31,217 @@
                 🌙
             </button>
 
+            <button
+                id="logout-button"
+                class="btn-secondary"
+                type="button"
+            >
+                Log Out
+            </button>
+
         </div>
-    </header>
 
-    <main class="auth-section">
+    </div>
 
-        <div class="auth-card">
+</header>
 
-            <div class="auth-header">
 
+<main class="dashboard">
+
+    <section class="dashboard-container">
+
+        <div class="dashboard-welcome">
+
+            <div>
                 <span class="badge">
-                    QuizXP Dashboard
+                    Student Dashboard
                 </span>
 
                 <h1 id="welcome-message">
-                    Loading...
+                    Welcome!
                 </h1>
 
-                <p id="user-email">
-                    Checking your account...
+                <p id="user-details">
+                    Loading your account...
+                </p>
+            </div>
+
+        </div>
+
+
+        <section class="stats-grid">
+
+            <div class="stat-card">
+                <span class="stat-label">
+                    XP
+                </span>
+
+                <strong id="xp-value">
+                    0
+                </strong>
+            </div>
+
+            <div class="stat-card">
+                <span class="stat-label">
+                    Level
+                </span>
+
+                <strong id="level-value">
+                    1
+                </strong>
+            </div>
+
+            <div class="stat-card">
+                <span class="stat-label">
+                    Streak
+                </span>
+
+                <strong id="streak-value">
+                    0 🔥
+                </strong>
+            </div>
+
+        </section>
+
+
+        <section class="dashboard-section">
+
+            <div class="section-heading">
+                <h2>What do you want to study?</h2>
+
+                <p>
+                    Choose an exam. You can switch between
+                    JAMB and WAEC whenever you want.
+                </p>
+            </div>
+
+
+            <div class="exam-selector">
+
+                <button
+                    type="button"
+                    class="exam-option active"
+                    data-exam="JAMB"
+                >
+                    <strong>JAMB</strong>
+
+                    <span>
+                        UTME preparation
+                    </span>
+                </button>
+
+                <button
+                    type="button"
+                    class="exam-option"
+                    data-exam="WAEC"
+                >
+                    <strong>WAEC</strong>
+
+                    <span>
+                        Senior secondary exams
+                    </span>
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <section class="dashboard-section">
+
+            <div class="section-heading">
+
+                <h2>Subjects</h2>
+
+                <p id="selected-exam-text">
+                    Choose a subject for JAMB.
+                </p>
+
+            </div>
+
+
+            <div class="subjects-grid">
+
+                <button
+                    type="button"
+                    class="subject-card"
+                >
+                    <span>📐</span>
+                    <strong>Mathematics</strong>
+                </button>
+
+                <button
+                    type="button"
+                    class="subject-card"
+                >
+                    <span>⚡</span>
+                    <strong>Physics</strong>
+                </button>
+
+                <button
+                    type="button"
+                    class="subject-card"
+                >
+                    <span>🧪</span>
+                    <strong>Chemistry</strong>
+                </button>
+
+                <button
+                    type="button"
+                    class="subject-card"
+                >
+                    <span>🧬</span>
+                    <strong>Biology</strong>
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <section class="dashboard-section continue-card">
+
+            <div>
+
+                <span class="badge">
+                    Ready?
+                </span>
+
+                <h2>
+                    Test your knowledge
+                </h2>
+
+                <p>
+                    Choose an exam and subject to begin
+                    your next QuizXP challenge.
                 </p>
 
             </div>
 
             <button
-                id="logout-button"
+                id="start-quiz-button"
                 type="button"
-                class="btn-primary auth-button"
+                class="btn-primary btn-lg"
             >
-                Log Out
+                Start a Quiz
             </button>
 
-            <p
-                id="dashboard-message"
-                class="form-message"
-                aria-live="polite"
-            ></p>
+        </section>
 
-        </div>
 
-    </main>
+        <p
+            id="dashboard-message"
+            class="form-message"
+            aria-live="polite"
+        ></p>
 
-    <script src="js/api.js"></script>
-    <script src="js/theme.js"></script>
-    <script src="js/dashboard.js"></script>
+    </section>
 
-</body>
+</main>
 
-</html>
+
+<script src="js/api.js"></script>
+<script src="js/theme.js"></script>
+<script src="js/dashboard.js"></script>
+
+</body></html>

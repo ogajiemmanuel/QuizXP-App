@@ -27,6 +27,45 @@ router.get('/subjects', async (req, res, next) => {
     }
 });
 
+// GET PUBLISHED QUIZZES FOR A SUBJECT
+router.get('/', authenticateJWT, async (req, res, next) => {
+    try {
+        const { subjectId } = req.query;
+        
+        if (!subjectId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Subject ID is required.'
+            });
+        }
+        
+        const result = await pool.query(
+            `SELECT
+                id,
+                title,
+                description,
+                quiz_type,
+                subject_id,
+                topic_id,
+                question_count,
+                time_limit_seconds
+             FROM quizzes
+             WHERE subject_id = $1
+               AND status = 'published'
+             ORDER BY created_at ASC`,
+            [subjectId]
+        );
+        
+        res.json({
+            success: true,
+            quizzes: result.rows
+        });
+        
+    } catch (err) {
+        next(err);
+    }
+});
+
 // START QUIZ WITH SERVER-SIDE QUESTION SET + OPTION RANDOMIZATION
 router.get('/start/:quizId', authenticateJWT, async (req, res, next) => {
     const client = await pool.connect();
@@ -194,7 +233,7 @@ router.post('/submit', authenticateJWT, async (req, res, next) => {
     attemptId,
     answers
 } = req.body;
-
+    
     if (
         !attemptId ||
         !answers ||
@@ -206,14 +245,14 @@ router.post('/submit', authenticateJWT, async (req, res, next) => {
             message: 'Attempt ID and answers are required.'
         });
     }
-
-
-
+    
+    
+    
     const client = await pool.connect();
-
+    
     try {
         await client.query('BEGIN');
-
+        
         // Get the user's active quiz attempt.
         const attemptRes = await client.query(
             `SELECT
@@ -238,16 +277,16 @@ router.post('/submit', authenticateJWT, async (req, res, next) => {
                 req.user.id
             ]
         );
-
+        
         if (attemptRes.rows.length === 0) {
             await client.query('ROLLBACK');
-
+            
             return res.status(404).json({
                 success: false,
                 message: 'Active quiz attempt not found.'
             });
         }
-
+        
         const attempt = attemptRes.rows[0];
 
 // Calculate the official quiz duration on the server.
@@ -258,62 +297,62 @@ const duration = Math.max(
     0,
     Math.floor((now - startedAt) / 1000)
 );
-
+        
         // Make sure the attempt has a stored question set.
         if (
             !Array.isArray(attempt.question_ids) ||
             attempt.question_ids.length === 0
         ) {
             await client.query('ROLLBACK');
-
+            
             return res.status(400).json({
                 success: false,
                 message: 'This quiz attempt has no valid question set.'
             });
         }
-
+        
         const questionIds = attempt.question_ids;
-
+        
         // Every submitted question ID must belong to this attempt.
         const submittedQuestionIds = Object.keys(answers);
-
+        
         const invalidQuestionIds = submittedQuestionIds.filter(
             (questionId) => !questionIds.includes(questionId)
         );
-
+        
         if (invalidQuestionIds.length > 0) {
             await client.query('ROLLBACK');
-
+            
             return res.status(400).json({
                 success: false,
                 message: 'One or more submitted question IDs are invalid for this quiz attempt.'
             });
         }
-
+        
         // Enforce the quiz time limit using the server-calculated duration.
         if (
             duration > attempt.time_limit_seconds
         ) {
             await client.query('ROLLBACK');
-
+            
             return res.status(400).json({
                 success: false,
                 message: 'Quiz submission exceeds the allowed time limit.'
             });
         }
-
+        
         let correctCount = 0;
-
+        
         // Score every question that was actually assigned
         // to this attempt.
         for (const questionId of questionIds) {
             const selectedOptionId = answers[questionId];
-
+            
             // Unanswered questions count as wrong.
             if (!selectedOptionId) {
                 continue;
             }
-
+            
             const checkRes = await client.query(
                 `SELECT
                     qo.is_correct
@@ -332,21 +371,21 @@ const duration = Math.max(
                     selectedOptionId
                 ]
             );
-
+            
             if (checkRes.rows.length === 0) {
                 await client.query('ROLLBACK');
-
+                
                 return res.status(400).json({
                     success: false,
                     message: 'One or more submitted answers are invalid for this quiz.'
                 });
             }
-
+            
             if (checkRes.rows[0].is_correct === true) {
                 correctCount++;
             }
         }
-
+        
         const totalQuestions = questionIds.length;
 
 const scorePct = Math.round(
@@ -389,7 +428,7 @@ const xpGained = xpCapResult.awardedXP;
                 req.user.id
             ]
         );
-
+        
         // XP ledger.
         await client.query(
     `INSERT INTO xp_transactions
@@ -410,7 +449,7 @@ const xpGained = xpCapResult.awardedXP;
         `Completed quiz with ${scorePct}% score`
     ]
 );
-
+        
         // Update profile XP and level.
         await client.query(
             `UPDATE profiles
@@ -424,9 +463,9 @@ const xpGained = xpCapResult.awardedXP;
                 req.user.id
             ]
         );
-
+        
         await client.query('COMMIT');
-
+        
         res.json({
             success: true,
             attemptId,
@@ -435,7 +474,7 @@ const xpGained = xpCapResult.awardedXP;
             totalQuestions,
             xpGained
         });
-
+        
     } catch (err) {
         await client.query('ROLLBACK');
         next(err);
