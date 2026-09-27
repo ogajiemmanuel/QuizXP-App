@@ -483,4 +483,42 @@ const xpGained = xpCapResult.awardedXP;
     }
 });
 
+
+/* GET STUDENT QUIZ HISTORY */
+router.get('/history', authenticateJWT, async (req, res, next) => {
+    try {
+        const result = await pool.query(
+            `SELECT
+                qa.id,
+                qa.score,
+                qa.correct_answers,
+                qa.total_questions,
+                qa.duration_seconds,
+                qa.xp_gained,
+                qa.completed_at,
+                q.title AS quiz_title,
+                q.quiz_type,
+                s.name AS subject_name
+             FROM quiz_attempts qa
+             JOIN quizzes q
+               ON q.id = qa.quiz_id
+             JOIN subjects s
+               ON s.id = q.subject_id
+             WHERE qa.user_id = $1
+               AND qa.status = 'completed'
+             ORDER BY qa.completed_at DESC
+             LIMIT 10`,
+            [req.user.id]
+        );
+
+        res.json({
+            success: true,
+            history: result.rows
+        });
+
+    } catch (err) {
+        next(err);
+    }
+});
+
 module.exports = router;

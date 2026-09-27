@@ -885,3 +885,49 @@ color: var(--muted);
     }
 
 }
+
+/* QUIZ HISTORY */
+
+.quiz-history {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.quiz-history-item {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: 20px;
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+}
+
+.quiz-history-item > div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.quiz-history-item strong {
+    color: var(--text);
+}
+
+.quiz-history-item span {
+    color: var(--muted-text);
+    font-size: 0.9rem;
+}
+
+@media (max-width: 600px) {
+    .quiz-history-item {
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .quiz-history-item > div:first-child {
+        grid-column: 1 / -1;
+    }
+}

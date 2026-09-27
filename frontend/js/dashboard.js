@@ -329,4 +329,61 @@ logoutButton.addEventListener('click', async () => {
 });
 
 
+
+async function loadQuizHistory() {
+    const historyContainer =
+        document.getElementById('quiz-history');
+
+    if (!historyContainer) {
+        return;
+    }
+
+    try {
+        const data =
+            await apiRequest('/api/quiz/history');
+
+        const history =
+            data.history || [];
+
+        if (history.length === 0) {
+            historyContainer.innerHTML =
+                '<p>No completed quizzes yet.</p>';
+            return;
+        }
+
+        historyContainer.innerHTML = '';
+
+        history.forEach((attempt) => {
+            const item =
+                document.createElement('div');
+
+            item.className = 'quiz-history-item';
+
+            item.innerHTML = `
+                <div>
+                    <strong>${attempt.quiz_title}</strong>
+                    <span>${attempt.subject_name}</span>
+                </div>
+
+                <div>
+                    <strong>${attempt.score}%</strong>
+                    <span>${attempt.correct_answers}/${attempt.total_questions} correct</span>
+                </div>
+
+                <div>
+                    <span>${attempt.duration_seconds}s</span>
+                    <span>+${attempt.xp_gained} XP</span>
+                </div>
+            `;
+
+            historyContainer.appendChild(item);
+        });
+
+    } catch (error) {
+        historyContainer.innerHTML =
+            `<p>${error.message}</p>`;
+    }
+}
+
 loadUser();
+loadQuizHistory();
