@@ -217,7 +217,6 @@ async function selectSubject(subject, card) {
         selectedQuizId =
     quizzes[0].id;
 
-alert(`Selected quiz ID: ${selectedQuizId}`);
 
 dashboardMessage.textContent =
     `${subject.name} selected. Quiz ready to start.`;
@@ -296,7 +295,6 @@ startQuizButton.addEventListener('click', () => {
     }
 
 
-    alert(`Navigating with quiz ID: ${selectedQuizId}`);
 
 window.location.href =
     `quiz.html?quizId=${encodeURIComponent(selectedQuizId)}`;

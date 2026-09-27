@@ -1,4 +1,3 @@
-alert('quiz.js is running');
 
 const quizTitle =
     document.getElementById('quiz-title');
@@ -60,7 +59,6 @@ const urlParams =
 const quizId =
     urlParams.get('quizId');
 
-alert(`Current URL: ${window.location.href}`);
 
 
 /* Load quiz */
@@ -79,7 +77,6 @@ async function loadQuiz() {
 
     try {
 
-        alert(`Starting quiz: ${quizId}`);
 
 const data =
     await apiRequest(
@@ -592,6 +589,5 @@ function showError(message) {
 
 /* Start */
 
-alert(`Quiz ID from URL: ${quizId}`);
 
 loadQuiz();
