@@ -467,6 +467,15 @@ submitButton.addEventListener(
     'click',
     () => {
 
+        const confirmed =
+            window.confirm(
+                'Are you sure you want to submit this quiz? You will not be able to change your answers after submission.'
+            );
+
+        if (!confirmed) {
+            return;
+        }
+
         submitQuiz();
 
     }
