@@ -55,6 +55,21 @@ let timerInterval = null;
 let remainingSeconds = 0;
 
 
+/* Prevent accidental exit during an active quiz */
+
+window.addEventListener(
+    'beforeunload',
+    (event) => {
+
+        if (attemptId) {
+            event.preventDefault();
+            event.returnValue = '';
+        }
+
+    }
+);
+
+
 /* Get quiz ID from URL */
 
 const urlParams =
