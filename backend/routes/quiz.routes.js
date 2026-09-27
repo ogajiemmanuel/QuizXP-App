@@ -521,4 +521,29 @@ router.get('/history', authenticateJWT, async (req, res, next) => {
     }
 });
 
+/* GET STUDENT QUIZ STATISTICS */
+router.get('/stats', authenticateJWT, async (req, res, next) => {
+    try {
+        const result = await pool.query(
+            `SELECT
+                COUNT(*)::int AS quizzes_completed,
+                COALESCE(ROUND(AVG(score)), 0)::int AS average_score,
+                COALESCE(MAX(score), 0)::int AS best_score,
+                COALESCE(SUM(xp_gained), 0)::int AS total_xp_earned
+             FROM quiz_attempts
+             WHERE user_id = $1
+               AND status = 'completed'`,
+            [req.user.id]
+        );
+
+        res.json({
+            success: true,
+            stats: result.rows[0]
+        });
+
+    } catch (err) {
+        next(err);
+    }
+});
+
 module.exports = router;

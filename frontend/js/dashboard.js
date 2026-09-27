@@ -13,6 +13,15 @@ const levelValue =
 const streakValue =
     document.getElementById('streak-value');
 
+const quizzesCompletedValue =
+    document.getElementById('quizzes-completed-value');
+
+const averageScoreValue =
+    document.getElementById('average-score-value');
+
+const bestScoreValue =
+    document.getElementById('best-score-value');
+
 const selectedExamText =
     document.getElementById('selected-exam-text');
 
@@ -36,6 +45,37 @@ let selectedExam = 'JAMB';
 let selectedSubject = null;
 let selectedQuizId = null;
 let allSubjects = [];
+
+
+/* Load quiz statistics */
+
+async function loadQuizStats() {
+
+    try {
+
+        const data =
+            await apiRequest('/api/quiz/stats');
+
+        const stats =
+            data.stats || {};
+
+        quizzesCompletedValue.textContent =
+            stats.quizzes_completed ?? 0;
+
+        averageScoreValue.textContent =
+            `${stats.average_score ?? 0}%`;
+
+        bestScoreValue.textContent =
+            `${stats.best_score ?? 0}%`;
+
+    } catch (error) {
+
+        quizzesCompletedValue.textContent = '—';
+        averageScoreValue.textContent = '—';
+        bestScoreValue.textContent = '—';
+
+    }
+}
 
 
 /* Load authenticated student */
@@ -387,3 +427,4 @@ async function loadQuizHistory() {
 
 loadUser();
 loadQuizHistory();
+loadQuizStats();
