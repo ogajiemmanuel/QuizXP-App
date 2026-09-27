@@ -833,3 +833,55 @@ color: var(--muted);
     }
 
 }
+
+
+/* Question Number Navigation */
+
+.question-number-navigation {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin: 20px 0;
+}
+
+.question-number-button {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.question-number-button:hover {
+    border-color: var(--primary);
+}
+
+.question-number-button.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.question-number-button.answered {
+    border-color: var(--primary);
+}
+
+@media (max-width: 600px) {
+
+    .question-number-navigation {
+        gap: 6px;
+    }
+
+    .question-number-button {
+        width: 36px;
+        height: 36px;
+    }
+
+}

@@ -35,6 +35,10 @@ const submitContainer =
 const submitButton =
     document.getElementById('submit-button');
 
+const questionNumberNavigation =
+    document.getElementById('question-number-navigation');
+
+
 const quizMessage =
     document.getElementById('quiz-message');
 
@@ -297,10 +301,50 @@ function renderQuestion() {
     );
 
 
+
+    renderQuestionNumbers();
+
     updateNavigation();
 
 }
 
+
+
+/* Question number navigation */
+
+function renderQuestionNumbers() {
+
+    questionNumberNavigation.innerHTML = "";
+
+    questions.forEach((question, index) => {
+
+        const numberButton =
+            document.createElement("button");
+
+        numberButton.type = "button";
+        numberButton.className = "question-number-button";
+        numberButton.textContent = index + 1;
+
+        if (index === currentQuestionIndex) {
+            numberButton.classList.add("active");
+        }
+
+        if (answers[question.id]) {
+            numberButton.classList.add("answered");
+        }
+
+        numberButton.addEventListener("click", () => {
+            currentQuestionIndex = index;
+            renderQuestion();
+        });
+
+        questionNumberNavigation.appendChild(
+            numberButton
+        );
+
+    });
+
+}
 
 /* Navigation */
 
