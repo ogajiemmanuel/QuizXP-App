@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Create Account - QuizXP</title>
+
+    <link rel="stylesheet" href="css/global.css">
+</head>
+
+<body>
+
+    <header class="header">
+        <div class="header-container">
+
+            <a href="index.html" class="logo">
+                <span class="logo-icon">⚡</span>
+                <span class="logo-text">
+                    Quiz<span class="accent">XP</span>
+                </span>
+            </a>
+
+            <button
+                id="theme-toggle"
+                class="btn-icon"
+                title="Toggle Theme"
+                type="button"
+            >
+                🌙
+            </button>
+
+        </div>
+    </header>
+
+    <main class="auth-section">
+
+        <div class="auth-card">
+
+            <div class="auth-header">
+                <span class="badge">Start Your Journey</span>
+
+                <h1>Create your QuizXP account</h1>
+
+                <p>
+                    Start learning, earn XP, and prepare for
+                    JAMB and WAEC.
+                </p>
+            </div>
+
+            <form id="register-form">
+
+                <div class="form-group">
+                    <label for="fullName">
+                        Full Name
+                    </label>
+
+                    <input
+                        id="fullName"
+                        name="fullName"
+                        type="text"
+                        placeholder="Enter your full name"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="email">
+                        Email Address
+                    </label>
+
+                    <input
+                        id="email"
+                        name="email"
+                        type="email"
+                        placeholder="you@example.com"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="school">
+                        School
+                    </label>
+
+                    <input
+                        id="school"
+                        name="school"
+                        type="text"
+                        placeholder="Your school (optional)"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="password">
+                        Password
+                    </label>
+
+                    <input
+                        id="password"
+                        name="password"
+                        type="password"
+                        placeholder="Create a password"
+                        minlength="6"
+                        required
+                    >
+                </div>
+
+                <button
+                    id="register-button"
+                    type="submit"
+                    class="btn-primary auth-button"
+                >
+                    Create Account
+                </button>
+
+                <p
+                    id="register-message"
+                    class="form-message"
+                    aria-live="polite"
+                ></p>
+
+            </form>
+
+            <p class="auth-footer">
+                Already have an account?
+                <a href="login.html" class="accent">
+                    Sign in
+                </a>
+            </p>
+
+        </div>
+
+    </main>
+
+    <script src="js/api.js"></script>
+    <script src="js/theme.js"></script>
+    <script src="js/register.js"></script>
+
+</body>
+
+</html>

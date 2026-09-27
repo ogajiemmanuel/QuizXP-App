@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Dashboard - QuizXP</title>
+
+    <link rel="stylesheet" href="css/global.css">
+</head>
+
+<body>
+
+    <header class="header">
+        <div class="header-container">
+
+            <a href="index.html" class="logo">
+                <span class="logo-icon">⚡</span>
+
+                <span class="logo-text">
+                    Quiz<span class="accent">XP</span>
+                </span>
+            </a>
+
+            <button
+                id="theme-toggle"
+                class="btn-icon"
+                title="Toggle Theme"
+                type="button"
+            >
+                🌙
+            </button>
+
+        </div>
+    </header>
+
+    <main class="auth-section">
+
+        <div class="auth-card">
+
+            <div class="auth-header">
+
+                <span class="badge">
+                    QuizXP Dashboard
+                </span>
+
+                <h1 id="welcome-message">
+                    Loading...
+                </h1>
+
+                <p id="user-email">
+                    Checking your account...
+                </p>
+
+            </div>
+
+            <button
+                id="logout-button"
+                type="button"
+                class="btn-primary auth-button"
+            >
+                Log Out
+            </button>
+
+            <p
+                id="dashboard-message"
+                class="form-message"
+                aria-live="polite"
+            ></p>
+
+        </div>
+
+    </main>
+
+    <script src="js/api.js"></script>
+    <script src="js/theme.js"></script>
+    <script src="js/dashboard.js"></script>
+
+</body>
+
+</html>

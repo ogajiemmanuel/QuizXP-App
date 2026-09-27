@@ -2,9 +2,13 @@
 
 const API_BASE_URL =
   window.API_BASE_URL ||
-  (window.location.hostname === 'localhost' ?
+  (
+    window.location.hostname === 'localhost' ?
     'http://localhost:5000' :
-    '');
+    window.location.hostname === '127.0.0.1' ?
+    'http://127.0.0.1:5000' :
+    ''
+  );
 
 async function apiRequest(endpoint, options = {}) {
   const config = {
@@ -45,5 +49,4 @@ async function apiRequest(endpoint, options = {}) {
   return data;
 }
 
-// Make the API function available to other frontend scripts
 window.apiRequest = apiRequest;
