@@ -562,6 +562,8 @@ async function submitQuiz() {
 
 function showResult(data) {
 
+    attemptId = null;
+
     questionContainer.innerHTML = `
         <div class="quiz-result">
 
